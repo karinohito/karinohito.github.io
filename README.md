@@ -1,2 +1,0 @@
-# karinohito.github.io
-test
