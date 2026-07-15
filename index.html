@@ -1,21 +1,62 @@
-<html>
+<!doctype html>
+<html lang="ja">
   <head>
-    <title>Table with Links</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="須田 雄大の経歴、講演歴、発表論文を掲載する個人サイトです。">
+    <title>須田 雄大</title>
+    <link rel="stylesheet" href="assets/css/style.css">
   </head>
   <body>
-    <table>
-      <thead>
-        <tr>
-          <th>Word</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><a href="page1.html">うに～</a></td>
-          <td>うにょうにょ</td>
-        </tr>
-      </tbody>
-    </table>
+    <a class="skip-link" href="#main">本文へ移動</a>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="site-name" href="#top">須田 雄大(Suda Takehiro)</a>
+        <nav aria-label="メインナビゲーション">
+          <ul class="nav-list">
+            <li><a href="#about">経歴</a></li><li><a href="#talks">講演歴</a></li><li><a href="#publications">発表論文</a></li><li><a href="#contact">連絡先</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="container hero-inner">
+          <p class="eyebrow">RESEARCHER · SPEAKER</p>
+          <!-- 氏名・肩書・専門分野を、ご自身の情報に書き換えてください。 -->
+          <h1>須田 雄大</h1>
+          <p class="hero-role">東北大学理学研究科数学専攻　博士課程後期1年</p>
+          <p class="hero-text">[Todo]</p>
+          <div class="hero-links"><a class="button button-primary" href="#talks">講演歴を見る</a><a class="button button-secondary" href="#contact">お問い合わせ</a></div>
+        </div>
+      </section>
+      <section class="section" id="about" aria-labelledby="about-title">
+        <div class="container two-column">
+          <div><p class="section-kicker">PROFILE</p><h2 id="about-title">経歴</h2><p></p></div>
+          <dl class="profile-list">
+            <div><dt>所属</dt><dd>東北大学理学研究科数学専攻</dd></div><div><dt>専門分野</dt><dd>数学</dd></div><div><dt>学位</dt><dd>修士（理学）</dd></div><div></div>
+          </dl>
+        </div>
+        <div class="container timeline-wrap">
+          <h3>略歴</h3>
+          <ol class="timeline">
+            <li><time datetime="2024">2026年〜現在</time><div><strong>東北大学理学研究科数学専攻 博士課程後期課程 在学中</strong></div></li>
+            <li><time datetime="2020">2024年</time><div><strong>東北大学理学研究科数学専攻 博士課程前期課程 修了</strong></div></li>
+          </ol>
+        </div>
+      </section>
+      <section class="section section-tint" id="talks" aria-labelledby="talks-title">
+        <div class="container">
+          <p class="section-kicker">TALKS &amp; MATERIALS</p><h2 id="talks-title">講演歴・予定(準備中)</h2><p class="section-intro">講演資料がある場合は、右側のボタンから直接ダウンロードできます。公開範囲に応じて、ボタンを「公開準備中」に変更することもできます。</p>
+          <!-- 新しい講演は talk-card を複製し、年月日順に追加してください。 -->
+          <div class="talk-list">
+            <article class="talk-card"><div class="talk-date"><time datetime="2026-05-18">2026.07.16</time><span>月齢報告会</span></div><div class="talk-content"><h3>Combinatorial proof of the sum formula for $q$MZVs</h3><p>東北大学、オンラインハイブリッド開催</p></div><a class="download-link" href="materials/getsurei_Suda_20260716.pdf" download>資料をダウンロード <span aria-hidden="true">↓</span></a></article>
+          </div>
+        </div>
+      </section>
+      <section class="section contact-section" id="contact" aria-labelledby="contact-title"><div class="container contact-inner"><div><p class="section-kicker">CONTACT</p><h2 id="contact-title">お問い合わせ</h2></div><div><p>ご連絡は、以下のメールアドレスまでお願いいたします。</p><a class="email-link" href="suda.takehiro.s7@dc.tohoku.ac.jp">suda.takehiro.s7@dc.tohoku.ac.jp</a></div></div></section>
+    </main>
+    <footer class="site-footer"><div class="container"><p>© <span id="year">2026</span> 須田 雄大</p></div></footer>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   </body>
 </html>
