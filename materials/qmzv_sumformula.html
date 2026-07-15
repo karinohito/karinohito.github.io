@@ -452,7 +452,7 @@
       first.mark.push(first.H);
       first.H += last.H;
       blocks.pop();
-      out.push(snapshot(blocks, `${labelPrefix}: stacking`, `mark に ${first.mark[first.mark.length - 1]} を追加し、tail を head にのせる。`, motion));
+      out.push(snapshot(blocks, `stacking`, `mark に ${first.mark[first.mark.length - 1]} を追加し、tail を head にのせる。`, motion));
     }
 
     function runFT(blocks, out, turn) {
