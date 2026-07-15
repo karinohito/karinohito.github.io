@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Block phi visualizer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #1e2329;
+      --muted: #68717d;
+      --line: #d7dde5;
+      --accent: #0f7b6c;
+      --accent-2: #b84a62;
+      --fill: #ffffff;
+      --mark: #111111;
+      --soft: #e8f4f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 24px 0 28px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 720;
+    }
+
+    .status {
+      min-width: 240px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: right;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(31, 38, 46, 0.06);
+    }
+
+    .controls {
+      padding: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 190px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 11px;
+      font: 14px/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      color: var(--ink);
+      background: #fbfcfd;
+    }
+
+    textarea:focus,
+    input:focus {
+      outline: 2px solid rgba(15, 123, 108, 0.22);
+      border-color: var(--accent);
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 12px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 86px;
+      gap: 10px;
+      align-items: end;
+      margin-top: 14px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .speed {
+      width: 86px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 8px;
+      font: inherit;
+    }
+
+    .notes {
+      margin-top: 12px;
+      padding: 10px 11px;
+      border-radius: 6px;
+      background: var(--soft);
+      color: #315c56;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .error {
+      display: none;
+      margin-top: 10px;
+      color: #a1263b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .stage {
+      overflow: hidden;
+    }
+
+    .stage-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .step-title {
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 720;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .step-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: min(68vh, 620px);
+      min-height: 390px;
+      background:
+        linear-gradient(#eef1f5 1px, transparent 1px),
+        linear-gradient(90deg, #eef1f5 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 10px 14px 13px;
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--line);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: #fff;
+    }
+
+    .swatch.mark {
+      border-color: #111;
+      background: #111;
+    }
+
+    @media (max-width: 840px) {
+      main {
+        width: min(100vw - 20px, 720px);
+        padding-top: 14px;
+      }
+
+      header,
+      .layout {
+        display: block;
+      }
+
+      .status {
+        margin-top: 6px;
+        min-width: 0;
+        text-align: left;
+      }
+
+      .stage {
+        margin-top: 14px;
+      }
+
+      .canvas-wrap {
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Visualizer for after "splitting"</h1>
+      </div>
+      <div class="status" id="status">入力を読み込んで開始できます</div>
+    </header>
+
+    <div class="layout">
+      <section class="panel controls" aria-label="入力と再生操作">
+        <label for="input">入力</label>
+        <textarea id="input" spellcheck="false">4
+3 5 2
+2 3
+4 4
+1 2</textarea>
+
+        <div class="button-row">
+          <button class="primary" id="build">読み込み</button>
+          <button id="play">再生</button>
+          <button id="pause">停止</button>
+          <button id="prev">戻る</button>
+          <button id="next">進む</button>
+        </div>
+
+        <div class="field-row">
+          <div>
+            <label for="seek">ステップ</label>
+            <input id="seek" type="range" min="0" max="0" value="0">
+          </div>
+          <div>
+            <label for="speed">速度</label>
+            <input class="speed" id="speed" type="number" min="0.2" max="4" step="0.1" value="1">
+          </div>
+        </div>
+
+        <div class="notes">
+          一行目にブロックの数を書きます。
+          二行目以降に (H,W,U) の情報を空白区切りで入力します。
+        </div>
+        <div class="error" id="error"></div>
+      </section>
+
+      <section class="panel stage" aria-label="Blockのアニメーション">
+        <div class="stage-top">
+          <div class="step-title" id="stepTitle">initial</div>
+          <div class="step-meta" id="stepMeta">0 / 0</div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="swatch"></span>Block のグリッド</span>
+          <span class="legend-item"><span class="swatch mark"></span>mark のセル</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const textarea = document.getElementById("input");
+    const buildButton = document.getElementById("build");
+    const playButton = document.getElementById("play");
+    const pauseButton = document.getElementById("pause");
+    const prevButton = document.getElementById("prev");
+    const nextButton = document.getElementById("next");
+    const seek = document.getElementById("seek");
+    const speedInput = document.getElementById("speed");
+    const errorBox = document.getElementById("error");
+    const status = document.getElementById("status");
+    const stepTitle = document.getElementById("stepTitle");
+    const stepMeta = document.getElementById("stepMeta");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const palette = ["#f3b64e", "#5aa7c8", "#8fc46b", "#d97a8d", "#a58fd2", "#e08954", "#6cb6a5"];
+
+    let frames = [];
+    let frameIndex = 0;
+    let fromFrame = null;
+    let toFrame = null;
+    let animationStart = 0;
+    let animationDuration = 850;
+    let playing = false;
+    let rafId = 0;
+
+    function parseInput(text) {
+      const nums = text.trim().split(/\s+/).filter(Boolean).map(Number);
+      if (nums.some((v) => !Number.isFinite(v))) {
+        throw new Error("入力には整数だけを入れてください。");
+      }
+      if (nums.length < 1) {
+        throw new Error("N がありません。");
+      }
+
+      let p = 0;
+      const n = nums[p++];
+      if (!Number.isInteger(n) || n <= 0) {
+        throw new Error("N は 1 以上の整数にしてください。");
+      }
+
+      const blocks = [];
+      for (let i = 0; i < n; i++) {
+        if (p + 1 >= nums.length) {
+          throw new Error(`${i + 1} 個目の Block に H W がありません。`);
+        }
+        const h = nums[p++];
+        const w = nums[p++];
+        if (!Number.isInteger(h) || !Number.isInteger(w) || h <= 0 || w <= 0) {
+          throw new Error("H と W は 1 以上の整数にしてください。");
+        }
+        const mark = [];
+        if (i === 0 && p < nums.length && nums.length === 1 + n * 2 + 1) {
+          mark.push(nums[p++]);
+        }
+        blocks.push({
+          id: `B${i + 1}`,
+          H: h,
+          W: w,
+          mark,
+          color: palette[i % palette.length]
+        });
+      }
+
+      if (p !== nums.length) {
+        throw new Error("余った数値があります。先頭 Block だけ H W u の3値にできます。");
+      }
+      return blocks;
+    }
+
+    function cloneBlocks(blocks) {
+      return blocks.map((b) => ({
+        id: b.id,
+        H: b.H,
+        W: b.W,
+        mark: [...b.mark],
+        color: b.color
+      }));
+    }
+
+    function snapshot(blocks, label, detail, motion = null) {
+      return {
+        blocks: cloneBlocks(blocks),
+        label,
+        detail,
+        motion
+      };
+    }
+
+    function rotateTailAfterHead(blocks) {
+      if (blocks.length <= 2) return;
+      const moved = blocks.pop();
+      blocks.splice(1, 0, moved);
+    }
+
+    function runST(blocks, out, labelPrefix) {
+      if (blocks.length === 0) return;
+      const first = blocks[0];
+      const last = blocks[blocks.length - 1];
+      const motion = {
+        type: "merge",
+        fromId: last.id,
+        toId: first.id,
+        fromH: last.H,
+        fromW: last.W
+      };
+      first.mark.push(first.H);
+      first.H += last.H;
+      blocks.pop();
+      out.push(snapshot(blocks, `${labelPrefix}: stacking`, `mark に ${first.mark[first.mark.length - 1]} を追加し、tail を head にのせる。`, motion));
+    }
+
+    function runFT(blocks, out, turn) {
+      const n = blocks.length;
+      let guard = 0;
+      out.push(snapshot(blocks, `head と tail の width を比較`, "head と tail の width を比較"));
+
+      while (blocks[n - 1].W !== blocks[0].W) {
+        guard++;
+        if (guard > 400) {
+          throw new Error("FT の反復が多すぎます。入力値を確認してください。");
+        }
+
+        if (blocks[n - 1].W < blocks[0].W) {
+          const last = blocks[n - 1];
+          const first = blocks[0];
+          last.H += first.H;
+          first.W -= last.W;
+          out.push(snapshot(blocks, ` trim`, `tail W < head W: tail H += head H、head W -= tail W`));
+          rotateTailAfterHead(blocks);
+          out.push(snapshot(blocks, ` rotate`, "B[n-1] を B[0] の直後へ移動"));
+        } else {
+          const last = blocks[n - 1];
+          const first = blocks[0];
+          first.H += last.H;
+          last.W -= first.W;
+          out.push(snapshot(blocks, ` trim`, `tail W > head W: head H += tail H、tail W -= head W`));
+        }
+      }
+
+      runST(blocks, out, `phi ${turn}`);
+    }
+
+    function buildFrames(blocks) {
+      const work = cloneBlocks(blocks);
+      const out = [snapshot(work, "initial", "入力された vector<Block>")];
+      const n = work.length;
+      for (let i = 0; i < n - 1; i++) {
+        runFT(work, out, i + 1);
+      }
+      out.push(snapshot(work, "done", "結果"));
+      return out;
+    }
+
+    function blockMap(frame) {
+      const map = new Map();
+      frame.blocks.forEach((b, i) => map.set(b.id, { ...b, order: i }));
+      return map;
+    }
+
+    function ease(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function layoutFor(blocks) {
+      const totalW = blocks.reduce((sum, b) => sum + Math.max(0.1, b.W), 0);
+      const maxH = Math.max(1, ...blocks.map((b) => b.H));
+      const paddingX = 34;
+      const paddingTop = 34;
+      const paddingBottom = 52;
+      const gap = blocks.length > 1 ? 14 : 0;
+      const totalGap = gap * Math.max(0, blocks.length - 1);
+      const usableW = Math.max(120, canvas.clientWidth - paddingX * 2);
+      const usableH = Math.max(120, canvas.clientHeight - paddingTop - paddingBottom);
+      const cell = Math.max(8, Math.min(42, (usableW - totalGap) / totalW, usableH / maxH));
+      let x = (canvas.clientWidth - (totalW * cell + totalGap)) / 2;
+      const placed = new Map();
+
+      blocks.forEach((b) => {
+        placed.set(b.id, {
+          id: b.id,
+          x,
+          y: paddingTop,
+          w: b.W * cell,
+          h: b.H * cell,
+          cell,
+          H: b.H,
+          W: b.W,
+          mark: [...b.mark],
+          color: b.color
+        });
+        x += b.W * cell + gap;
+      });
+      return placed;
+    }
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas.height = Math.max(1, Math.round(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawCurrent();
+    }
+
+    function drawBlock(b, alpha) {
+      if (b.w <= 0 || b.h <= 0) return;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#222831";
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+      const cols = Math.max(1, Math.round(b.W));
+      const rows = Math.max(1, Math.round(b.H));
+      const cw = b.w / cols;
+      const ch = b.h / rows;
+
+      ctx.fillStyle = b.color;
+      ctx.globalAlpha = alpha * 0.14;
+      ctx.fillRect(b.x + 1, b.y + 1, Math.max(0, b.w - 2), Math.max(0, b.h - 2));
+      ctx.globalAlpha = alpha;
+
+      ctx.strokeStyle = "rgba(31, 38, 46, 0.24)";
+      ctx.lineWidth = 1;
+      for (let c = 1; c < cols; c++) {
+        const x = b.x + c * cw;
+        ctx.beginPath();
+        ctx.moveTo(x, b.y);
+        ctx.lineTo(x, b.y + b.h);
+        ctx.stroke();
+      }
+      for (let r = 1; r < rows; r++) {
+        const y = b.y + r * ch;
+        ctx.beginPath();
+        ctx.moveTo(b.x, y);
+        ctx.lineTo(b.x + b.w, y);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#111";
+      b.mark.forEach((m) => {
+        if (!Number.isFinite(m)) return;
+        const rowFromBottom = Math.round(m);
+        if (rowFromBottom < 0 || rowFromBottom >= rows) return;
+        const y = b.y + (rows - 1 - rowFromBottom) * ch;
+        ctx.fillRect(b.x, y, cw, ch);
+      });
+
+      ctx.fillStyle = "#1e2329";
+      ctx.font = "12px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(`${b.id}  H=${Math.round(b.H)} W=${Math.round(b.W)}`, b.x + b.w / 2, b.y + b.h + 8);
+      ctx.restore();
+    }
+
+    function drawMotionGuide(start, end, alpha) {
+      const sx = start.x + start.w / 2;
+      const sy = start.y + start.h / 2;
+      const ex = end.x + end.w / 2;
+      const ey = end.y + end.h / 2;
+      const dx = ex - sx;
+      const dy = ey - sy;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 8) return;
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.55, alpha);
+      ctx.strokeStyle = "#0f7b6c";
+      ctx.fillStyle = "#0f7b6c";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([7, 7]);
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const angle = Math.atan2(dy, dx);
+      const size = 8;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - Math.cos(angle - 0.55) * size, ey - Math.sin(angle - 0.55) * size);
+      ctx.lineTo(ex - Math.cos(angle + 0.55) * size, ey - Math.sin(angle + 0.55) * size);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawFramePair(a, b, t) {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      const k = ease(t);
+      const layoutA = layoutFor(a.blocks);
+      const layoutB = layoutFor(b.blocks);
+      const dataA = blockMap(a);
+      const dataB = blockMap(b);
+      const ids = new Set([...dataA.keys(), ...dataB.keys()]);
+
+      ids.forEach((id) => {
+        const la = layoutA.get(id);
+        const lb = layoutB.get(id);
+        const da = dataA.get(id);
+        const db = dataB.get(id);
+        const mergeTarget = b.motion && b.motion.type === "merge" && b.motion.fromId === id
+          ? layoutB.get(b.motion.toId)
+          : null;
+        const mergeEnd = mergeTarget && da
+          ? {
+              ...mergeTarget,
+              y: mergeTarget.y,
+              w: Math.max(1, da.W * mergeTarget.cell),
+              h: Math.max(1, da.H * mergeTarget.cell),
+              H: da.H,
+              W: da.W,
+              mark: da.mark,
+              color: da.color
+            }
+          : null;
+        const start = la || mergeEnd || lb;
+        const end = lb || mergeEnd || la;
+        const source = db || da;
+        const alpha = la && lb ? 1 : la && mergeEnd ? Math.max(0, Math.min(1, (1 - k) / 0.18)) : la ? 1 - k : k;
+        const blended = {
+          id,
+          x: lerp(start.x, end.x, k),
+          y: lerp(start.y, end.y, k),
+          w: lerp(start.w, end.w, k),
+          h: lerp(start.h, end.h, k),
+          H: lerp(da ? da.H : db.H, db ? db.H : da.H, k),
+          W: lerp(da ? da.W : db.W, db ? db.W : da.W, k),
+          mark: source.mark,
+          color: source.color
+        };
+        drawMotionGuide(start, end, Math.sin(Math.PI * Math.min(1, t)));
+        drawBlock(blended, alpha);
+      });
+    }
+
+    function applyFrame(index) {
+      frameIndex = Math.max(0, Math.min(index, frames.length - 1));
+      seek.value = String(frameIndex);
+      const frame = frames[frameIndex];
+      stepTitle.textContent = frame.label;
+      stepMeta.textContent = `${frameIndex} / ${Math.max(0, frames.length - 1)}`;
+      status.textContent = frame.detail;
+      fromFrame = frame;
+      toFrame = frame;
+      drawCurrent();
+    }
+
+    function drawCurrent() {
+      if (!frames.length) return;
+      drawFramePair(fromFrame || frames[frameIndex], toFrame || frames[frameIndex], 1);
+    }
+
+    function animateTo(index) {
+      if (!frames.length) return;
+      const nextIndex = Math.max(0, Math.min(index, frames.length - 1));
+      if (nextIndex === frameIndex) {
+        applyFrame(nextIndex);
+        return;
+      }
+      cancelAnimationFrame(rafId);
+      fromFrame = frames[frameIndex];
+      toFrame = frames[nextIndex];
+      frameIndex = nextIndex;
+      seek.value = String(frameIndex);
+      stepTitle.textContent = toFrame.label;
+      stepMeta.textContent = `${frameIndex} / ${Math.max(0, frames.length - 1)}`;
+      status.textContent = toFrame.detail;
+      animationDuration = 850 / Math.max(0.2, Number(speedInput.value) || 1);
+      animationStart = performance.now();
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function tick(now) {
+      const t = Math.min(1, (now - animationStart) / animationDuration);
+      drawFramePair(fromFrame, toFrame, t);
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      fromFrame = toFrame;
+      if (playing && frameIndex < frames.length - 1) {
+        setTimeout(() => animateTo(frameIndex + 1), 90);
+      } else {
+        playing = false;
+      }
+    }
+
+    function rebuild() {
+      try {
+        errorBox.style.display = "none";
+        const blocks = parseInput(textarea.value);
+        frames = buildFrames(blocks);
+        seek.max = String(Math.max(0, frames.length - 1));
+        playing = false;
+        applyFrame(0);
+      } catch (err) {
+        playing = false;
+        errorBox.textContent = err.message;
+        errorBox.style.display = "block";
+      }
+    }
+
+    buildButton.addEventListener("click", rebuild);
+    playButton.addEventListener("click", () => {
+      if (!frames.length) rebuild();
+      playing = true;
+      if (frameIndex >= frames.length - 1) applyFrame(0);
+      animateTo(frameIndex + 1);
+    });
+    pauseButton.addEventListener("click", () => {
+      playing = false;
+      cancelAnimationFrame(rafId);
+      drawCurrent();
+    });
+    prevButton.addEventListener("click", () => {
+      playing = false;
+      animateTo(frameIndex - 1);
+    });
+    nextButton.addEventListener("click", () => {
+      playing = false;
+      animateTo(frameIndex + 1);
+    });
+    seek.addEventListener("input", () => {
+      playing = false;
+      animateTo(Number(seek.value));
+    });
+    window.addEventListener("resize", resizeCanvas);
+
+    resizeCanvas();
+    rebuild();
+  </script>
+</body>
+</html>
