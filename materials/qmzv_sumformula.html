@@ -278,7 +278,7 @@
   <main>
     <header>
       <div>
-        <h1>Visualizer for after "splitting"</h1>
+        <h1>Visualizer for after "Splitting"</h1>
       </div>
       <div class="status" id="status">入力を読み込んで開始できます</div>
     </header>
@@ -287,13 +287,14 @@
       <section class="panel controls" aria-label="入力と再生操作">
         <label for="input">入力</label>
         <textarea id="input" spellcheck="false">4
-3 5 2
-2 3
-4 4
-1 2</textarea>
+5 6 4
+3 6
+3 2
+1 4</textarea>
 
         <div class="button-row">
           <button class="primary" id="build">読み込み</button>
+          <button id="random">ランダム生成</button>
           <button id="play">再生</button>
           <button id="pause">停止</button>
           <button id="prev">戻る</button>
@@ -307,13 +308,13 @@
           </div>
           <div>
             <label for="speed">速度</label>
-            <input class="speed" id="speed" type="number" min="0.2" max="4" step="0.1" value="1">
+            <input class="speed" id="speed" type="number" min="0.2" max="4" step="0.1" value="0.3">
           </div>
         </div>
 
         <div class="notes">
-          一行目にブロックの数を書きます。
-          二行目以降に (H,W,U) の情報を空白区切りで入力します。
+          一行目にブロックの数、二行目に <code>H₁ W₁ U</code>、三行目以降に各 <code>Hᵢ Wᵢ</code> を空白区切りで入力します。<br>
+          「ランダム生成」は、<code>N = 3〜6</code>、広義単調減少の <code>H</code>、合計面積56〜64、<code>H₁ - U ≤ Hₙ</code> を満たす入力を作成します。
         </div>
         <div class="error" id="error"></div>
       </section>
@@ -339,6 +340,7 @@
 
     const textarea = document.getElementById("input");
     const buildButton = document.getElementById("build");
+    const randomButton = document.getElementById("random");
     const playButton = document.getElementById("play");
     const pauseButton = document.getElementById("pause");
     const prevButton = document.getElementById("prev");
@@ -390,7 +392,11 @@
         }
         const mark = [];
         if (i === 0 && p < nums.length && nums.length === 1 + n * 2 + 1) {
-          mark.push(nums[p++]);
+          const u = nums[p++];
+          if (!Number.isInteger(u) || u < 0) {
+            throw new Error("U は 0 以上の整数にしてください。");
+          }
+          mark.push(u);
         }
         blocks.push({
           id: `B${i + 1}`,
@@ -489,6 +495,40 @@
       }
       out.push(snapshot(work, "done", "結果"));
       return out;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateRandomInput() {
+      const n = randomInt(3, 6);
+      const heights = Array(n);
+      heights[n - 1] = randomInt(1,2);
+      for (let i = n - 2; i >= 0; i--) {
+        heights[i] = heights[i + 1] + randomInt(0, 3);
+      }
+
+      const targetArea = randomInt(20, 64);
+      const widths = Array(n).fill(1);
+      let remainingArea = targetArea - heights.reduce((sum, h) => sum + h, 0);
+
+      // H_n = 1 なので、残りの面積を必ずちょうど配分できる。
+      while (remainingArea > 0) {
+        const candidates = heights
+          .map((h, index) => ({ h, index }))
+          .filter(({ h }) => h <= remainingArea);
+        const { h, index } = candidates[randomInt(0, candidates.length - 1)];
+        widths[index]++;
+        remainingArea -= h;
+      }
+
+      const u = randomInt(heights[0] - heights[n - 1], heights[0] - 1);
+      const lines = [String(n)];
+      heights.forEach((h, index) => {
+        lines.push(index === 0 ? `${h} ${widths[index]} ${u}` : `${h} ${widths[index]}`);
+      });
+      return lines.join("\n");
     }
 
     function blockMap(frame) {
@@ -750,6 +790,10 @@
     }
 
     buildButton.addEventListener("click", rebuild);
+    randomButton.addEventListener("click", () => {
+      textarea.value = generateRandomInput();
+      rebuild();
+    });
     playButton.addEventListener("click", () => {
       if (!frames.length) rebuild();
       playing = true;
