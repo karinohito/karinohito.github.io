@@ -314,7 +314,7 @@
 
         <div class="notes">
           一行目にブロックの数、二行目に <code>H₁ W₁ U</code>、三行目以降に各 <code>Hᵢ Wᵢ</code> を空白区切りで入力します。<br>
-          「ランダム生成」は、<code>N = 3〜6</code>、広義単調減少の <code>H</code>、合計面積56〜64、<code>H₁ - U ≤ Hₙ</code> を満たす入力を作成します。
+          「ランダム生成」は、良い感じの入力をランダムに作成します。
         </div>
         <div class="error" id="error"></div>
       </section>
@@ -473,7 +473,7 @@
           first.W -= last.W;
           out.push(snapshot(blocks, ` trim`, `tail W < head W: tail H += head H、head W -= tail W`));
           rotateTailAfterHead(blocks);
-          out.push(snapshot(blocks, ` rotate`, "B[n-1] を B[0] の直後へ移動"));
+          out.push(snapshot(blocks, ` rotate`, "tail を head の直後へ移動"));
         } else {
           const last = blocks[n - 1];
           const first = blocks[0];
