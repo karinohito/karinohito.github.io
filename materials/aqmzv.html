@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AQMZ 計算機</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f4f7fb; color: #172033; }
+    main { max-width: 720px; margin: 48px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 8px 26px #17203318; }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    p { line-height: 1.6; color: #4a5871; }
+    label { display: block; margin-top: 20px; font-weight: 700; }
+    input { box-sizing: border-box; width: 100%; margin-top: 7px; padding: 10px 12px; border: 1px solid #b8c4d8; border-radius: 8px; font: inherit; }
+    small { display: block; margin-top: 6px; color: #60708a; }
+    button { margin-top: 24px; padding: 10px 18px; border: 0; border-radius: 8px; background: #2458c6; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #1c46a1; }
+    #error { min-height: 1.4em; margin: 16px 0 0; color: #bd1e2d; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; text-align: right; }
+    caption { padding-bottom: 8px; text-align: left; font-weight: 700; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #dce3ee; }
+    th { background: #edf3ff; }
+    th:first-child, td:first-child { text-align: center; }
+    [hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>AQMZ 計算機</h1>
+      <p>深さと、各段階の指数を入力してください。100〜199の素数をランダムに選び、C++版と同じ計算を10回行います。</p>
+      <form id="calculator">
+        <label for="depth">深さ</label>
+        <input id="depth" name="depth" type="number" min="1" step="1" value="2" required>
+        <label for="indices">指数</label>
+        <input id="indices" name="indices" type="text" value="1 2" placeholder="例: 1 2 3" required>
+        <small>深さと同じ個数の、0以上の整数を空白またはカンマで区切って入力します。</small>
+        <button type="submit">計算する</button>
+      </form>
+      <p id="error" role="alert"></p>
+      <table id="result" hidden>
+        <caption>計算結果</caption>
+        <thead><tr><th>回</th><th>素数 p</th><th>結果</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector('#calculator');
+    const depthInput = document.querySelector('#depth');
+    const indicesInput = document.querySelector('#indices');
+    const error = document.querySelector('#error');
+    const table = document.querySelector('#result');
+    const tbody = table.querySelector('tbody');
+
+    function modPow(base, exponent, mod) {
+      let result = 1n;
+      base %= mod;
+      while (exponent > 0n) {
+        if (exponent % 2n === 1n) result = result * base % mod;
+        base = base * base % mod;
+        exponent /= 2n;
+      }
+      return result;
+    }
+
+    // aqmz.cpp の inva(a, p) と calc(Index, p) を JavaScript に移植したもの。
+    function calc(indices, p) {
+      const modulus = BigInt(p);
+      let previous = Array(p).fill(1n); // DP[0][b] = 1
+      for (const index of indices) {
+        const current = Array(p).fill(0n);
+        for (let b = 1; b < p; b++) {
+          const denominator = modPow(BigInt(b), index, modulus);
+          const inverse = modPow(denominator, modulus - 2n, modulus);
+          current[b] = (previous[b - 1] * inverse + current[b - 1]) % modulus;
+        }
+        previous = current;
+      }
+      return previous[p - 1];
+    }
+
+    function isPrime(n) {
+      if (n < 2) return false;
+      for (let divisor = 2; divisor * divisor <= n; divisor++) {
+        if (n % divisor === 0) return false;
+      }
+      return true;
+    }
+
+    const primes = Array.from({ length: 100 }, (_, i) => i + 100).filter(isPrime);
+    function randomPrime() {
+      return primes[Math.floor(Math.random() * primes.length)];
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      error.textContent = '';
+      table.hidden = true;
+
+      const depth = Number(depthInput.value);
+      const tokens = indicesInput.value.trim().split(/[\s,]+/).filter(Boolean);
+      if (!Number.isSafeInteger(depth) || depth < 1) {
+        error.textContent = '深さには1以上の整数を入力してください。';
+        return;
+      }
+      if (tokens.length !== depth) {
+        error.textContent = `指数は深さと同じ ${depth} 個入力してください。`;
+        return;
+      }
+
+      let indices;
+      try {
+        if (!tokens.every(token => /^\d+$/.test(token))) throw new Error();
+        indices = tokens.map(token => BigInt(token));
+      } catch {
+        error.textContent = '指数には0以上の整数だけを入力してください。';
+        return;
+      }
+
+      const rows = Array.from({ length: 10 }, (_, i) => {
+        const p = randomPrime();
+        return `<tr><td>${i + 1}</td><td>${p}</td><td>${calc(indices, p)}</td></tr>`;
+      });
+      tbody.innerHTML = rows.join('');
+      table.hidden = false;
+    });
+  </script>
+</body>
+</html>
