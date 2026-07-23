@@ -20,4 +20,12 @@ h1, h2, h3 { line-height: 1.35; } h1 { font-size: clamp(2.8rem, 7vw, 5rem); lett
 .talk-actions { justify-self: end; width: 100%; display: grid; gap: 8px; }
 .publication-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 52px; }.publication-group h3 { padding-bottom: 12px; border-bottom: 2px solid var(--brand); }.publication-list { list-style: none; padding: 0; margin: 0; }.publication-list li { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--line); }.pub-year { color: var(--brand-dark); font-weight: 700; }.publication-list p { margin: 0; font-size: .92rem; line-height: 1.75; }.publication-list a { align-self: start; font-size: .84rem; white-space: nowrap; }
 .contact-section { color: #fff; background: #173f42; }.contact-section .section-kicker { color: #9fd9d1; }.contact-section h2 { margin-bottom: 0; }.contact-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }.contact-inner p { margin: 0 0 10px; }.email-link { color: #fff; font-size: 1.2rem; font-weight: 700; text-underline-offset: 4px; }.email-link:hover { color: #b7e6df; }.site-footer { padding: 20px 0; color: var(--muted); background: #f4f5f4; font-size: .84rem; }.site-footer p { margin: 0; }
+.plain-link {
+    color: inherit;          /* 周囲の文字色と同じ */
+    text-decoration: none;   /* 下線を消す */
+}
+
+.plain-link:hover {
+    text-decoration: none;   /* ホバー時も下線を付けない */
+}
 @media (max-width: 760px) { .header-inner { min-height: auto; padding: 14px 0; align-items: flex-start; flex-direction: column; gap: 7px; }.nav-list { justify-content: flex-start; gap: 4px 16px; }.hero { padding: 76px 0 70px; }.section { padding: 64px 0; }.two-column, .publication-groups, .contact-inner { grid-template-columns: 1fr; gap: 36px; }.profile-list div { grid-template-columns: 1fr; gap: 2px; }.timeline li { grid-template-columns: 1fr; gap: 5px; padding-left: 24px; }.timeline li::before { left: 0; top: 7px; }.timeline li:not(:last-child)::after { left: 5px; top: 20px; }.talk-card { grid-template-columns: 1fr; gap: 10px; }.talk-actions { justify-self: start; width: auto; }.download-link, .unavailable { justify-self: start; width: auto; }.publication-list li { grid-template-columns: 48px 1fr; }.publication-list li a { grid-column: 2; } }
